@@ -1,0 +1,2 @@
+read GITHUB_TOKEN
+export GITHUB_TOKEN

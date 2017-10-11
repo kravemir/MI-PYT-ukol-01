@@ -12,7 +12,7 @@ import configparser
 
 @click.group('labelord')
 @click.pass_context
-@click.option('--config','config_path')
+@click.option('-c','--config','config_path')
 @click.option('-t','--token',envvar='GITHUB_TOKEN')
 def cli(ctx,config_path,token):
     config = configparser.ConfigParser()
@@ -22,6 +22,10 @@ def cli(ctx,config_path,token):
 
     if not token and config_path:
         token = config['github']['token']
+
+    if not token:
+        print('No GitHub token has been provided')
+        exit(3)
 
     # Use this session for communication with GitHub
     session = ctx.obj.get('session', requests.Session())
@@ -39,10 +43,22 @@ def cli(ctx,config_path,token):
 def list_repos(ctx):
     # TODO: Add required options/arguments
     # TODO: Implement the 'list_repos' command
-    session = ctx.obj['session']
-    r = session.get('https://api.github.com/user/repos?per_page=100&page=1')
-    for repo in r.json():
-        print(repo['full_name'])
+
+    url = 'https://api.github.com/user/repos?per_page=100&page=1'
+
+    while url:
+        session = ctx.obj['session']
+        r = session.get(url)
+        if r.status_code != 200:
+            print("GitHub: ERROR {} - {}".format(r.status_code,r.json()['message']))
+            exit(4)
+        for repo in r.json():
+            print(repo['full_name'])
+
+        if 'next' in r.links:
+            url = r.links['next']['url']
+        else:
+            url = None
 
 
 @cli.command()

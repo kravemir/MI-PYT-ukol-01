@@ -63,10 +63,24 @@ def list_repos(ctx):
 
 @cli.command()
 @click.pass_context
-def list_labels(ctx):
-    # TODO: Add required options/arguments
-    # TODO: Implement the 'list_labels' command
-    ...
+@click.argument('slug')
+def list_labels(ctx,slug):
+    url = 'https://api.github.com/repos/{}/labels?per_page=100&page=1'.format(slug)
+    session = ctx.obj['session']
+    while url:
+        r = session.get(url)
+        if r.status_code == 404:
+            print("GitHub: ERROR {} - {}".format(r.status_code,r.json()['message']))
+            exit(5)
+        if r.status_code != 200:
+            print("GitHub: ERROR {} - {}".format(r.status_code,r.json()['message']))
+            exit(4)
+        for label in r.json():
+            print('#{} {}'.format(label['color'], label['name']))
+        if 'next' in r.links:
+            url = r.links['next']['url']
+        else:
+            url = None
 
 
 @cli.command()

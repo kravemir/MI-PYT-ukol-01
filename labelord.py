@@ -10,11 +10,12 @@ import configparser
 # Try to make it DRY also for your own good
 
 
-@click.group('labelord')
+@click.group('labelord',invoke_without_command=True)
 @click.pass_context
+@click.option('--version',is_flag=True)
 @click.option('-c','--config','config_path')
 @click.option('-t','--token',envvar='GITHUB_TOKEN')
-def cli(ctx,config_path,token):
+def cli(ctx,config_path,token,version):
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
 
@@ -24,27 +25,35 @@ def cli(ctx,config_path,token):
     if not token and config_path:
         token = config['github']['token']
 
-    if not token:
-        print('No GitHub token has been provided')
-        exit(3)
-
     # Use this session for communication with GitHub
-    session = ctx.obj.get('session', requests.Session())
-    session.headers = {'User-Agent': 'Python: MI-PYT-ukol-01 (by kravemir)'}
-    def token_auth(req):
-        req.headers['Authorization'] = 'token ' + token
-        return req
-    session.auth = token_auth
+    original_session = ctx.obj.get('session', requests.Session())
+    session_storage = []
+    def make_session():
+        if len(session_storage) == 0:
+            if not token:
+                print('No GitHub token has been provided')
+                exit(3)
+            session = original_session
+            session.headers = {'User-Agent': 'Python: MI-PYT-ukol-01 (by kravemir)'}
+            def token_auth(req):
+                req.headers['Authorization'] = 'token ' + token
+                return req
+            session.auth = token_auth
+            session_storage.append(session)
+        return session_storage[0]
 
-    ctx.obj['session'] = session
+    ctx.obj['session'] = make_session
     ctx.obj['config'] = config
+
+    if version:
+        print('labelord, version 0.1')
 
 def retrieve_repos(ctx):
     repos = []
     url = 'https://api.github.com/user/repos?per_page=100&page=1'
 
     while url:
-        session = ctx.obj['session']
+        session = ctx.obj['session']()
         r = session.get(url)
         if r.status_code != 200:
             print("GitHub: ERROR {} - {}".format(r.status_code,r.json()['message']))
@@ -69,7 +78,7 @@ def list_repos(ctx):
 def retrieve_labels(ctx,slug):
     labels = []
     url = 'https://api.github.com/repos/{}/labels?per_page=100&page=1'.format(slug)
-    session = ctx.obj['session']
+    session = ctx.obj['session']()
     while url:
         r = session.get(url)
         if r.status_code == 404:
@@ -121,9 +130,10 @@ def printErrorResponse(verbose,quiet,tag,text,response):
 @click.option('-q','--quiet', default=False, is_flag=True)
 @click.option('-a','--all-repos', 'all_repos', default=False, is_flag=True)
 @click.option('-d','--dry-run', 'dry_run', default=False, is_flag=True)
-def run(ctx,mode,verbose,quiet,all_repos,dry_run):
+@click.option('-r','--template-repo', 'template_repo' )
+def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
     config = ctx.obj['config']
-    session = ctx.obj['session']
+    session = ctx.obj['session']()
     if not 'labels' in config:
         print('No labels specification has been found')
         exit(6)
@@ -135,13 +145,15 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run):
     update_errors = 0
     repos = []
     if 'repos' in config:
-        repos = [repo for repo in config['repos'] if config['repos'][repo].lower() in ['on', 'true', '1']]
+        repos = [repo for repo in config['repos'] if config['repos'][repo].lower() in ['on', 'true', 'yes', '1']]
 
     if all_repos:
         repos = [repo['full_name'] for repo in retrieve_repos(ctx)]
 
     labels = [(label,config['labels'][label]) for label in config['labels']]
-    if 'others' in config and 'template-repo' in config['others']:
+    if template_repo:
+        labels = [(label['name'],label['color']) for label in retrieve_labels(ctx,template_repo)]
+    elif 'others' in config and 'template-repo' in config['others']:
         labels = [(label['name'],label['color']) for label in retrieve_labels(ctx,config['others']['template-repo'])]
 
     for repo in repos:
@@ -155,7 +167,7 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run):
         updated_repos = updated_repos + 1
         for label,color in labels:
             label_json={'name': label,'color':color}
-            match = [l for l in original_labels if label == l['name'] ]
+            match = [l for l in original_labels if label.lower() == l['name'].lower() ]
             if len(match) == 0:
                 # TODO: outputs
                 if dry_run:
@@ -169,11 +181,11 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run):
                     print('[ADD][SUC] {}; {}; {}'.format(repo, label, color))
             else:
                 # TODO: outputs
-                if match[0]['color'] != color:
+                if match[0]['color'] != color or match[0]['name'] != label:
                     if dry_run:
                         printDry(verbose,quiet,'UPD','{}; {}; {}'.format(repo,label,color))
                         continue
-                    label_url = 'https://api.github.com/repos/{}/labels/{}'.format(repo,label)
+                    label_url = match[0]['url']
                     r = session.patch(label_url,json=label_json)
                     if r.status_code != 200:
                         update_errors += 1

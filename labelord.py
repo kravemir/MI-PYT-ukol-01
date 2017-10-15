@@ -94,6 +94,26 @@ def list_labels(ctx,slug):
         print('#{} {}'.format(label['color'], label['name']))
 
 
+def printError(verbose,quiet,tag,text):
+    if quiet:
+        return
+    if verbose:
+        print("[{}][ERR] {}".format(tag,text))
+    else:
+        print("ERROR: {}; {}".format(tag,text))
+
+def printDry(verbose,quiet,tag,text):
+    if quiet:
+        return
+    if verbose:
+        print("[{}][DRY] {}".format(tag,text))
+
+def printErrorResponse(verbose,quiet,tag,text,response):
+    if quiet:
+        return
+    printError(verbose,quiet,tag,text + "; {} - {}".format(response.status_code,response.json()['message']))
+
+
 @cli.command()
 @click.pass_context
 @click.argument('mode')
@@ -128,7 +148,8 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run):
         original_labels_r = session.get('https://api.github.com/repos/{}/labels?per_page=100&page=1'.format(repo))
         if original_labels_r.status_code != 200:
             update_errors += 1
-            print("ERROR: LBL; {}; {} - {}".format(repo,original_labels_r.status_code,original_labels_r.json()['message']))
+            if not quiet:
+                printErrorResponse(verbose,quiet,'LBL',repo,original_labels_r)
             continue
         original_labels = original_labels_r.json()
         updated_repos = updated_repos + 1
@@ -138,37 +159,50 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run):
             if len(match) == 0:
                 # TODO: outputs
                 if dry_run:
+                    printDry(verbose,quiet,'ADD','{}; {}; {}'.format(repo,label,color))
                     continue
                 r = session.post('https://api.github.com/repos/{}/labels'.format(repo), json=label_json)
-                if verbose:
-                    print('[ADD][SUC] {}; {}; {}', repo, label, color)
                 if r.status_code != 201:
                     update_errors += 1
-                    print("ERROR: ADD; {}; {}; {}; {} - {}".format(repo,label,color,r.status_code,r.json()['message']))
+                    printError(verbose,quiet,'ADD','{}; {}; {}; {} - {}'.format(repo,label,color,r.status_code,r.json()['message']))
+                elif verbose and not quiet:
+                    print('[ADD][SUC] {}; {}; {}'.format(repo, label, color))
             else:
                 # TODO: outputs
-                if dry_run:
-                    continue
                 if match[0]['color'] != color:
+                    if dry_run:
+                        printDry(verbose,quiet,'UPD','{}; {}; {}'.format(repo,label,color))
+                        continue
                     label_url = 'https://api.github.com/repos/{}/labels/{}'.format(repo,label)
                     r = session.patch(label_url,json=label_json)
                     if r.status_code != 200:
                         update_errors += 1
-                        print("ERROR: UPD; {}; {}; {}; {} - {}".format(repo,label,color,r.status_code,r.json()['message']))
+                        printError(verbose,quiet,'UPD','{}; {}; {}; {} - {}'.format(repo,label,color,r.status_code,r.json()['message']))
+                    elif verbose and not quiet:
+                        print('[UPD][SUC] {}; {}; {}'.format(repo, label, color))
         if mode == 'replace':
             label_names = [ name for name,color in labels ]
             for label in (label for label in original_labels if not label['name'] in label_names):
                 # TODO: output
                 if dry_run:
+                    printDry(verbose,quiet,'DEL','{}; {}; {}'.format(repo,label['name'],label['color']))
                     continue
                 label_url = 'https://api.github.com/repos/{}/labels/{}'.format(repo,label['name'])
                 r = session.delete(label_url)
+                if verbose and not quiet:
+                    print('[DEL][SUC] {}; {}; {}'.format(repo, label['name'], label['color']))
 
 
     if update_errors == 0:
-        print ('SUMMARY: {} repo(s) updated successfully'.format(updated_repos))
+        if verbose and not quiet:
+            print ('[SUMMARY] {} repo(s) updated successfully'.format(updated_repos))
+        elif (verbose and quiet) or not quiet:
+            print ('SUMMARY: {} repo(s) updated successfully'.format(updated_repos))
     else:
-        print ('SUMMARY: {} error(s) in total, please check log above'.format(update_errors))
+        if verbose and not quiet:
+            print ('[SUMMARY] {} error(s) in total, please check log above'.format(update_errors))
+        elif (verbose and quiet) or not quiet:
+            print ('SUMMARY: {} error(s) in total, please check log above'.format(update_errors))
         exit(10)
 
 

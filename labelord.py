@@ -155,6 +155,15 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run):
                     if r.status_code != 200:
                         update_errors += 1
                         print("ERROR: UPD; {}; {}; {}; {} - {}".format(repo,label,color,r.status_code,r.json()['message']))
+        if mode == 'replace':
+            label_names = [ name for name,color in labels ]
+            for label in (label for label in original_labels if not label['name'] in label_names):
+                # TODO: output
+                if dry_run:
+                    continue
+                label_url = 'https://api.github.com/repos/{}/labels/{}'.format(repo,label['name'])
+                r = session.delete(label_url)
+
 
     if update_errors == 0:
         print ('SUMMARY: {} repo(s) updated successfully'.format(updated_repos))

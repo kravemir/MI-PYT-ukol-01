@@ -118,7 +118,6 @@ def test_update_verbose_with_errors(invoker, utils):
                              'delete': 0
                          })
     lines = invocation.result.output.split('\n')
-    print(invocation.result.output)
 
     assert invocation.result.exit_code == 10
     assert len(lines) == 9 and lines[-1] == ''

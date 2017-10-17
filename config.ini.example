@@ -1,0 +1,10 @@
+[github]
+token=notRealToken
+
+[repos]
+kravemir/kravemir.github.io = on
+kravemir/kravemir.github.io2 = off
+
+[labels]
+Bug = FF0000
+Last year = 23FB89

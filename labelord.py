@@ -5,6 +5,7 @@
 import click
 import requests
 import configparser
+import os.path
 
 # Structure your implementation as you want (OOP, FP, ...)
 # Try to make it DRY also for your own good
@@ -13,16 +14,18 @@ import configparser
 @click.group('labelord',invoke_without_command=True)
 @click.pass_context
 @click.option('--version',is_flag=True)
-@click.option('-c','--config','config_path')
+@click.option('-c','--config','config_path',type=click.Path(exists=True))
 @click.option('-t','--token',envvar='GITHUB_TOKEN')
 def cli(ctx,config_path,token,version):
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
 
-    if config_path:
+    if config_path and os.path.isfile(config_path):
         config.read(config_path)
+    elif os.path.isfile('config.ini'):
+        config.read('config.ini')
 
-    if not token and config_path:
+    if not token and config.has_option('github','token'):
         token = config['github']['token']
 
     # Use this session for communication with GitHub

@@ -105,7 +105,7 @@ def list_labels(ctx,slug):
 
 @cli.command()
 @click.pass_context
-@click.argument('mode')
+@click.argument('mode',type=click.Choice(['update','replace']))
 @click.option('-v','--verbose', default=False, is_flag=True)
 @click.option('-q','--quiet', default=False, is_flag=True)
 @click.option('-a','--all-repos', 'all_repos', default=False, is_flag=True)

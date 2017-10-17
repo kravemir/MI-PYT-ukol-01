@@ -70,8 +70,6 @@ def retrieve_repos(ctx):
 @cli.command()
 @click.pass_context
 def list_repos(ctx):
-    # TODO: Add required options/arguments
-    # TODO: Implement the 'list_repos' command
     for repo in retrieve_repos(ctx):
         print(repo['full_name'])
 
@@ -102,27 +100,6 @@ def list_labels(ctx,slug):
     for label in retrieve_labels(ctx,slug):
         print('#{} {}'.format(label['color'], label['name']))
 
-
-def printError(verbose,quiet,tag,text):
-    if quiet:
-        return
-    if verbose:
-        print("[{}][ERR] {}".format(tag,text))
-    else:
-        print("ERROR: {}; {}".format(tag,text))
-
-def printDry(verbose,quiet,tag,text):
-    if quiet:
-        return
-    if verbose:
-        print("[{}][DRY] {}".format(tag,text))
-
-def printErrorResponse(verbose,quiet,tag,text,response):
-    if quiet:
-        return
-    printError(verbose,quiet,tag,text + "; {} - {}".format(response.status_code,response.json()['message']))
-
-
 @cli.command()
 @click.pass_context
 @click.argument('mode')
@@ -134,46 +111,60 @@ def printErrorResponse(verbose,quiet,tag,text,response):
 def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
     config = ctx.obj['config']
     session = ctx.obj['session']()
-    if not 'labels' in config:
+
+    # fallback to config
+    if not template_repo and 'others' in config and 'template-repo' in config['others']:
+        template_repo = config['others']['template-repo']
+
+    # get list of labels to update, if not defined, print error and exit(6)
+    labels = None
+    if template_repo:
+        labels = [(label['name'],label['color']) for label in retrieve_labels(ctx,template_repo)]
+    elif 'labels' in config:
+        labels = [(label,config['labels'][label]) for label in config['labels']]
+    else:
         print('No labels specification has been found')
         exit(6)
-    if not 'repos' in config:
+
+    # get list of repositories to update, if not defined, print error and exit(7)
+    repos = None
+    if all_repos:
+        repos = [repo['full_name'] for repo in retrieve_repos(ctx)]
+    elif 'repos' in config:
+        repos = [repo for repo in config['repos'] if config.getboolean('repos',repo)]
+    else:
         print('No repositories specification has been found')
         exit(7)
 
     updated_repos = 0
     update_errors = [0]
 
+    def log_error(tag,text,response):
+        update_errors[0] += 1
+        if not quiet:
+            text = text + "; {} - {}".format(response.status_code,response.json()['message'])
+            if verbose:
+                print("[{}][ERR] {}".format(tag,text))
+            else:
+                print("ERROR: {}; {}".format(tag,text))
+
     def run_command(tag, text, text_params, method, url, expected_status, json = None):
         if dry_run:
-            printDry(verbose,quiet,tag,text.format(*text_params))
+            # in dry run print operation to output, but only in non-quiet verbose mode
+            if not quiet and verbose:
+                print("[{}][DRY] {}".format(tag,text.format(*text_params)))
         else:
+            # perform command, and print log to output
             r = getattr(session,method)(url,json=json)
             if r.status_code != expected_status:
-                update_errors[0] += 1
-                printErrorResponse(verbose,quiet,tag,text.format(*text_params),r)
+                log_error(tag,text.format(*text_params),r)
             elif verbose and not quiet:
                 print('[{}][SUC] '.format(tag) + text.format(*text_params))
-
-    repos = []
-    if 'repos' in config:
-        repos = [repo for repo in config['repos'] if config['repos'][repo].lower() in ['on', 'true', 'yes', '1']]
-
-    if all_repos:
-        repos = [repo['full_name'] for repo in retrieve_repos(ctx)]
-
-    labels = [(label,config['labels'][label]) for label in config['labels']]
-    if template_repo:
-        labels = [(label['name'],label['color']) for label in retrieve_labels(ctx,template_repo)]
-    elif 'others' in config and 'template-repo' in config['others']:
-        labels = [(label['name'],label['color']) for label in retrieve_labels(ctx,config['others']['template-repo'])]
 
     for repo in repos:
         original_labels_r = session.get('https://api.github.com/repos/{}/labels?per_page=100&page=1'.format(repo))
         if original_labels_r.status_code != 200:
-            update_errors[0] += 1
-            if not quiet:
-                printErrorResponse(verbose,quiet,'LBL',repo,original_labels_r)
+            log_error('LBL',repo,original_labels_r)
             continue
         original_labels = original_labels_r.json()
         updated_repos = updated_repos + 1

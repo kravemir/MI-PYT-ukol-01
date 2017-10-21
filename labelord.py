@@ -251,8 +251,12 @@ app = LabelordWeb(__name__)
 # TODO: implement web app
 # hint: you can use flask.current_app (inside app context)
 
-@app.route('/')
+@app.route('/',methods=['GET'])
 def hello():
+    return 'Hello MI-PYT!'
+
+@app.route('/',methods=['POST'])
+def hello_post():
     return 'Hello MI-PYT!'
 
 

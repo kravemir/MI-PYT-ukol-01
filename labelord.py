@@ -264,10 +264,24 @@ class LabelordWeb(Flask):
         config = configparser.ConfigParser()
         config.optionxform = lambda option: option
         config.read(config_file)
+
+        import sys
+        if not config.has_option('github','token'):
+            sys.stderr.write('No GitHub token has been provided\n')
+            exit(3)
+        if not 'repos' in config:
+            sys.stderr.write('No repositories specification has been found\n')
+            exit(7)
+        if not config.has_option('github','webhook_secret'):
+            sys.stderr.write('No webhook secret has been provided\n')
+            exit(8)
+
         self.data = {}
         self.data['config'] = config
         self.token = config['github']['token']
         self.session = None
+
+
 
 
 # TODO: instantiate LabelordWeb app

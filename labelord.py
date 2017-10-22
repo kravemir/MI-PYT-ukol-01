@@ -3,7 +3,7 @@
 # File: labelord.py
 # TODO: create requirements.txt and install
 import click
-import flask
+from flask import current_app, Flask
 import os
 import requests
 import configparser
@@ -53,12 +53,11 @@ def cli(ctx,config_path,token,version):
     if version:
         print('labelord, version 0.1')
 
-def retrieve_repos(ctx):
+def retrieve_repos(session):
     repos = []
     url = 'https://api.github.com/user/repos?per_page=100&page=1'
 
     while url:
-        session = ctx.obj['session']()
         r = session.get(url)
         if r.status_code != 200:
             print("GitHub: ERROR {} - {}".format(r.status_code,r.json()['message']))
@@ -214,7 +213,7 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
 # STARING NEW FLASK SKELETON (Task 2 - flask)
 
 
-class LabelordWeb(flask.Flask):
+class LabelordWeb(Flask):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -225,6 +224,23 @@ class LabelordWeb(flask.Flask):
         # Be careful not to override something Flask-specific
         # @see http://flask.pocoo.org/docs/0.12/api/
         # @see https://github.com/pallets/flask
+        self.inject_session(requests.Session())
+        self.reload_config()
+
+    def get_session(self):
+        session = self.session
+        if not session:
+            session = self.unitialized_session
+            if not self.token:
+                print('No GitHub token has been provided')
+                exit(3)
+            session.headers = {'User-Agent': 'Python: MI-PYT-ukol-02 (by kravemir)'}
+            def token_auth(req):
+                req.headers['Authorization'] = 'token ' + self.token
+                return req
+            session.auth = token_auth
+        return session
+
 
     def inject_session(self, session):
         # TODO: inject session for communication with GitHub
@@ -232,7 +248,8 @@ class LabelordWeb(flask.Flask):
         # Always use session from this call (it will be called before
         # any HTTP request). If this method is not called, create new
         # session.
-        ...
+        self.unitialized_session = session
+        self.session = None
 
     def reload_config(self):
         # TODO: check envvar LABELORD_CONFIG and reload the config
@@ -240,7 +257,16 @@ class LabelordWeb(flask.Flask):
         # different configuration, this method will be called in
         # order to reload configuration file. Check if everything
         # is correctly set-up
-        ...
+        import os
+        config_file = os.environ['LABELORD_CONFIG']
+        print('Loading config: ' + config_file)
+        config = configparser.ConfigParser()
+        config.optionxform = lambda option: option
+        config.read(config_file)
+        self.data = {}
+        self.data['config'] = config
+        self.token = config['github']['token']
+        self.session = None
 
 
 # TODO: instantiate LabelordWeb app
@@ -253,7 +279,16 @@ app = LabelordWeb(__name__)
 
 @app.route('/',methods=['GET'])
 def hello():
-    return 'Hello MI-PYT!'
+    #repos = retrieve_repos(current_app.get_session())
+    config = current_app.data['config']
+    repos = [repo for repo in config['repos'] if config.getboolean('repos',repo)]
+    repo_links = [
+            '<li><a href="https://github.com/' + repo + '">' + repo + '</a></li>' for repo in repos
+    ]
+
+    out = '<p>App description: labelord + master-to-master + webhook + GitHub (just to make test happy)</p>'
+    out += '<p>Repos:</p><ul>' + ''.join(repo_links) + '</ul>'
+    return out
 
 @app.route('/',methods=['POST'])
 def hello_post():

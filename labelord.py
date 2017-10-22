@@ -224,6 +224,7 @@ class LabelordWeb(Flask):
         # Be careful not to override something Flask-specific
         # @see http://flask.pocoo.org/docs/0.12/api/
         # @see https://github.com/pallets/flask
+        self.current_labels = {}
         self.inject_session(requests.Session())
         self.reload_config()
 
@@ -290,8 +291,66 @@ def hello():
     out += '<p>Repos:</p><ul>' + ''.join(repo_links) + '</ul>'
     return out
 
+def sign_request(key,msg):
+    from hashlib import sha1
+    import hmac
+    import base64
+
+    key = bytes(key, 'utf-8')
+
+    hashed = hmac.new(key, msg, sha1)
+    return hashed.hexdigest()
+
 @app.route('/',methods=['POST'])
 def hello_post():
+    config = current_app.data['config']
+    repos = [repo for repo in config['repos'] if config.getboolean('repos',repo)]
+
+    from flask import request
+
+    if not 'X-Hub-Signature' in request.headers:
+        return '', 401
+
+    signature = sign_request(config['github']['webhook_secret'],request.get_data())
+    print(signature)
+
+    if signature != request.headers['X-Hub-Signature'].split('=',2)[1]:
+        return '', 401
+
+    data = request.get_json()
+
+    # check not allowed repository
+    if not data['repository']['full_name'] in repos:
+        return '', 400
+
+    session = current_app.get_session()
+    if 'action' in data:
+        label_json={'name': data['label']['name'],'color':data['label']['color']}
+        label_json_str = label_json['name'] + label_json['color']
+        current_label_str = current_app.current_labels.get(label_json['name'].lower(),None)
+
+        if data['action'] == 'created' and current_label_str != label_json_str:
+            current_app.current_labels[label_json['name'].lower()] = label_json_str
+            for repo in (r for r in repos if r != data['repository']['full_name']):
+                print("Creating: " + repo)
+                session.post('https://api.github.com/repos/{}/labels'.format(repo), json = label_json)
+        if data['action'] == 'edited' and current_label_str != label_json_str:
+            current_app.current_labels[label_json['name'].lower()] = label_json_str
+            for repo in (r for r in repos if r != data['repository']['full_name']):
+                print("Updating: " + repo)
+                name = label_json['name']
+                if 'name' in data['changes']:
+                    name = data['changes']['name']['from']
+                session.patch(
+                        'https://api.github.com/repos/{}/labels/{}'.format(repo,name),
+                        json = label_json
+                )
+        if data['action'] == 'deleted' and current_label_str != 'deleted':
+            current_app.current_labels[label_json['name'].lower()] = 'deleted'
+            for repo in (r for r in repos if r != data['repository']['full_name']):
+                print("Deleting: " + repo)
+                session.delete('https://api.github.com/repos/{}/labels/{}'.format(repo,data['label']['name']))
+
     return 'Hello MI-PYT!'
 
 

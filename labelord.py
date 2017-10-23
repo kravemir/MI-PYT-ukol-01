@@ -325,7 +325,6 @@ def sign_request(key,msg):
 @app.route('/',methods=['POST'])
 def hello_post():
     config = current_app.data['config']
-    repos = [repo for repo in config['repos'] if config.getboolean('repos',repo)]
 
     from flask import request
 
@@ -339,13 +338,14 @@ def hello_post():
         return '', 401
 
     data = request.get_json()
+    if data and 'action' in data:
+        session = current_app.get_session()
+        repos = [repo for repo in config['repos'] if config.getboolean('repos',repo)]
 
-    # check not allowed repository
-    if not data['repository']['full_name'] in repos:
-        return '', 400
+        # check not allowed repository
+        if not data['repository']['full_name'] in repos:
+            return '', 400
 
-    session = current_app.get_session()
-    if 'action' in data:
         label_json={'name': data['label']['name'],'color':data['label']['color']}
         label_json_str = label_json['name'] + label_json['color']
         current_label_str = current_app.current_labels.get(label_json['name'].lower(),None)

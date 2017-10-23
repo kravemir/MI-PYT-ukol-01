@@ -1,13 +1,14 @@
 # MI-PYT-ukol-01
 
-Run:
+Run tests:
 
 ```bash
 python3.5 -m venv __venv__
 . __venv__/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-python -m pytest labelord.py tests/ 2>/dev/null
+python -m pytest labelord.py tests_cli/ 2>/dev/null
+python -m pytest labelord.py tests_web/ 2>/dev/null
 ```
 
 Tested on:

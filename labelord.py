@@ -49,6 +49,7 @@ def cli(ctx,config_path,token,version):
 
     ctx.obj['session'] = make_session
     ctx.obj['config'] = config
+    ctx.obj['config_path'] = config_path
 
     if version:
         print('labelord, version 0.1')
@@ -226,7 +227,11 @@ class LabelordWeb(Flask):
         # @see http://flask.pocoo.org/docs/0.12/api/
         # @see https://github.com/pallets/flask
         self.current_labels = {}
+        self.config_path = None
         self.inject_session(requests.Session())
+        def reload():
+            self.reload_config()
+        self.before_first_request(reload)
 
     def get_session(self):
         session = self.session
@@ -259,11 +264,13 @@ class LabelordWeb(Flask):
         # order to reload configuration file. Check if everything
         # is correctly set-up
         import os
-        config_file = os.environ['LABELORD_CONFIG']
-        print('Loading config: ' + config_file)
+        config_path = self.config_path
+        if not config_path:
+            config_path = os.environ['LABELORD_CONFIG']
+        print('Loading config: ' + config_path)
         config = configparser.ConfigParser()
         config.optionxform = lambda option: option
-        config.read(config_file)
+        config.read(config_path)
 
         import sys
         if not config.has_option('github','token'):
@@ -369,11 +376,17 @@ def hello_post():
 
 
 @cli.command()
+@click.option('-h','--host')
+@click.option('-p','--port')
+@click.option('-d','--debug', default=False, is_flag=True)
 @click.pass_context
-def run_server(ctx):
+def run_server(ctx,host,port,debug):
     # TODO: implement the command for starting web app (use app.run)
     # Don't forget to app the session from context to app
-    ...
+    app.config_path = ctx.obj['config_path']
+    app.reload_config()
+    app.run(host,port,debug)
+
 
 
 # ENDING  NEW FLASK SKELETON

@@ -74,7 +74,8 @@ def retrieve_repos(session):
 @cli.command()
 @click.pass_context
 def list_repos(ctx):
-    for repo in retrieve_repos(ctx):
+    session = ctx.obj['session']()
+    for repo in retrieve_repos(session):
         print(repo['full_name'])
 
 def retrieve_labels(ctx,slug):
@@ -133,7 +134,7 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
     # get list of repositories to update, if not defined, print error and exit(7)
     repos = None
     if all_repos:
-        repos = [repo['full_name'] for repo in retrieve_repos(ctx)]
+        repos = [repo['full_name'] for repo in retrieve_repos(session)]
     elif 'repos' in config:
         repos = [repo for repo in config['repos'] if config.getboolean('repos',repo)]
     else:
@@ -226,7 +227,6 @@ class LabelordWeb(Flask):
         # @see https://github.com/pallets/flask
         self.current_labels = {}
         self.inject_session(requests.Session())
-        self.reload_config()
 
     def get_session(self):
         session = self.session

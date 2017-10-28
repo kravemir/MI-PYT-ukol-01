@@ -19,5 +19,11 @@ setup(
         'License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',
+    ],
+    install_requires = [
+        'Flask>=0.12',
+        'click>=6.7',
+        'configparser>=3.5.0',
+        'requests>=2.0'
     ]
 )

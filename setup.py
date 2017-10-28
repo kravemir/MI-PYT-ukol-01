@@ -15,7 +15,7 @@ setup(
     url='https://github.com/kravemir/MI-PYT-ukol-01',
     packages=['labelord'],
     package_data={
-        'labelord' : ['*.html'],
+        'labelord' : ['templates/*.html'],
     },
     classifiers = [
         'Intended Audience :: Other Audience',

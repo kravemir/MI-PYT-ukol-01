@@ -11,6 +11,20 @@ python -m pytest labelord.py tests_cli/ 2>/dev/null
 python -m pytest labelord.py tests_web/ 2>/dev/null
 ```
 
+Run new tests:
+
+```bash
+python3.6 -m venv __venv__
+. __venv__/bin/activate
+pip install -r requirements.txt 
+
+export CTU_USERNAME=kravemir
+export LABELORD_REPO='git@github.com:kravemir/MI-PYT-ukol-01.git'
+export LABELORD_BRANCH=modules
+
+python -m pytest tests_module/test_submodules.py 
+```
+
 Tested on:
 
 ```bash

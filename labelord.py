@@ -15,6 +15,8 @@ def run_server(ctx,host,port,debug):
     app.reload_config()
     app.run(host,port,debug)
 
+def main():
+    cli(obj={})
 
 if __name__ == '__main__':
-    cli(obj={})
+    main()

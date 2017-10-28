@@ -26,5 +26,10 @@ setup(
         'configparser>=3.5.0',
         'requests>=2.0'
     ],
+    entry_points={
+        'console_scripts': [
+            'labelord = labelord:main',
+        ],
+    },
     zip_safe=False
 )

@@ -4,6 +4,8 @@ import requests
 import configparser
 import os.path
 
+from github import *
+
 @click.group('labelord',invoke_without_command=True)
 @click.pass_context
 @click.option('--version',is_flag=True)
@@ -145,14 +147,15 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
             else:
                 print("ERROR: {}; {}".format(tag,text))
 
-    def run_command(tag, text, text_params, method, url, expected_status, json = None):
+    # just to utilize github.py
+    def run_function(tag, text, text_params, fn, args, expected_status):
         if dry_run:
             # in dry run print operation to output, but only in non-quiet verbose mode
             if not quiet and verbose:
                 print("[{}][DRY] {}".format(tag,text.format(*text_params)))
         else:
             # perform command, and print log to output
-            r = getattr(session,method)(url,json=json)
+            r = fn(session, *args)
             if r.status_code != expected_status:
                 log_error(tag,text.format(*text_params),r)
             elif verbose and not quiet:
@@ -169,22 +172,22 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
             label_json={'name': label,'color':color}
             match = [l for l in original_labels if label.lower() == l['name'].lower() ]
             if len(match) == 0:
-                run_command(
+                run_function(
                     'ADD', '{}; {}; {}', [repo,label,color],
-                    'post', 'https://api.github.com/repos/{}/labels'.format(repo), 201, label_json
+                    create_label, [repo, label_json], 201
                 )
             else:
                 if match[0]['color'] != color or match[0]['name'] != label:
-                    run_command(
+                    run_function(
                         'UPD', '{}; {}; {}', [repo,label,color],
-                        'patch', match[0]['url'], 200, label_json
+                        update_label, [repo, match[0]['name'], label_json], 200
                     )
         if mode == 'replace':
             label_names = [ name for name,color in labels ]
             for label in (label for label in original_labels if not label['name'] in label_names):
-                run_command(
+                run_function(
                     'DEL', '{}; {}; {}', [repo,label['name'],label['color']],
-                    'delete', 'https://api.github.com/repos/{}/labels/{}'.format(repo,label['name']), 204
+                    delete_label, [repo,label['name']], 204
                 )
 
 

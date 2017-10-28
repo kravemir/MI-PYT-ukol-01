@@ -3,6 +3,8 @@ import configparser
 import os.path
 from flask import current_app, Flask
 
+from github import *
+
 class LabelordWeb(Flask):
 
     def __init__(self, *args, **kwargs):
@@ -142,7 +144,7 @@ def hello_post():
             current_app.current_labels[label_json['name'].lower()] = label_json_str
             for repo in (r for r in repos if r != data['repository']['full_name']):
                 print("Creating: " + repo)
-                session.post('https://api.github.com/repos/{}/labels'.format(repo), json = label_json)
+                create_label(session, repo, label_json)
         if data['action'] == 'edited' and current_label_str != label_json_str:
             current_app.current_labels[label_json['name'].lower()] = label_json_str
             for repo in (r for r in repos if r != data['repository']['full_name']):
@@ -150,14 +152,11 @@ def hello_post():
                 name = label_json['name']
                 if 'name' in data['changes']:
                     name = data['changes']['name']['from']
-                session.patch(
-                        'https://api.github.com/repos/{}/labels/{}'.format(repo,name),
-                        json = label_json
-                )
+                update_label(session,repo,name,label_json)
         if data['action'] == 'deleted' and current_label_str != 'deleted':
             current_app.current_labels[label_json['name'].lower()] = 'deleted'
             for repo in (r for r in repos if r != data['repository']['full_name']):
                 print("Deleting: " + repo)
-                session.delete('https://api.github.com/repos/{}/labels/{}'.format(repo,data['label']['name']))
+                delete_label(session,repo,data['label']['name'])
 
     return 'Hello MI-PYT!'

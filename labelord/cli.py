@@ -203,5 +203,15 @@ def run(ctx,mode,verbose,quiet,all_repos,dry_run, template_repo):
             print ('SUMMARY: {} error(s) in total, please check log above'.format(update_errors[0]))
         exit(10)
 
-if __name__ == '__main__':
-    cli(obj={})
+@cli.command()
+@click.option('-h','--host')
+@click.option('-p','--port')
+@click.option('-d','--debug', default=False, is_flag=True)
+@click.pass_context
+def run_server(ctx,host,port,debug):
+    from .web import app
+    # TODO: implement the command for starting web app (use app.run)
+    # Don't forget to app the session from context to app
+    app.config_path = ctx.obj['config_path']
+    app.reload_config()
+    app.run(host,port,debug)

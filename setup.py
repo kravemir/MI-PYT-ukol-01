@@ -14,6 +14,9 @@ setup(
     license='Creative Commons Legal Code',
     url='https://github.com/kravemir/MI-PYT-ukol-01',
     packages=['labelord'],
+    package_data={
+        'labelord' : ['*.html'],
+    },
     classifiers = [
         'Intended Audience :: Other Audience',
         'Environment :: Console',

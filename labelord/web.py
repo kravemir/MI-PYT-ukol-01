@@ -3,7 +3,7 @@ import configparser
 import os.path
 from flask import current_app, Flask
 
-from github import *
+from .github import *
 
 class LabelordWeb(Flask):
 

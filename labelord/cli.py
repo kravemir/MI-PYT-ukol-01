@@ -4,7 +4,7 @@ import requests
 import configparser
 import os.path
 
-from github import *
+from .github import *
 
 @click.group('labelord',invoke_without_command=True)
 @click.pass_context

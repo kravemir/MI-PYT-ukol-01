@@ -1,7 +1,7 @@
 import click
 
-from cli import cli
-from web import app
+from .cli import cli
+from .web import app
 
 @cli.command()
 @click.option('-h','--host')
@@ -17,6 +17,3 @@ def run_server(ctx,host,port,debug):
 
 def main():
     cli(obj={})
-
-if __name__ == '__main__':
-    main()

@@ -13,7 +13,7 @@ setup(
     keywords='homework,fit ctu,mi-pyt',
     license='Creative Commons Legal Code',
     url='https://github.com/kravemir/MI-PYT-ukol-01',
-    py_modules=['labelord','github','cli','web'],
+    packages=['labelord'],
     classifiers = [
         'Intended Audience :: Other Audience',
         'Environment :: Console',
@@ -31,7 +31,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'labelord = labelord:main',
+            'labelord = labelord.labelord:main',
         ],
     },
     zip_safe=False

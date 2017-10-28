@@ -5,7 +5,7 @@ with open('README.md') as f:
 
 setup(
     name='labelord_kravemir',
-    version='0.3-SNAPSHOT',
+    version='0.3a1',
     description='CTU FIT - MI-PYT: homework labelord packaging',
     long_description=long_description,
     author='Miroslav Kravec',

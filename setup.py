@@ -12,7 +12,7 @@ setup(
     author_email='kravemir@fit.cvut.cz',
     license='Creative Commons Legal Code',
     url='https://github.com/kravemir/MI-PYT-ukol-01',
-    py_modules=['labelord'],
+    py_modules=['labelord','github','cli','web'],
     classifiers = [
         'Intended Audience :: Other Audience',
         'Framework :: Flask',
@@ -25,5 +25,6 @@ setup(
         'click>=6.7',
         'configparser>=3.5.0',
         'requests>=2.0'
-    ]
+    ],
+    zip_safe=False
 )

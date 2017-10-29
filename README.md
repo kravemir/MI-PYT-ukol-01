@@ -6,7 +6,7 @@ Run:
 # clone and enter directory
 git clone git@github.com:kravemir/MI-PYT-ukol-01.git
 cd MI-PYT-ukol-01/
-git checkout modules
+git checkout v0.3
 
 # install venv and required packages
 python3.6 -m venv __venv__
@@ -21,7 +21,7 @@ python -m pytest tests_web/
 # export properties for module tests
 export CTU_USERNAME=kravemir
 export LABELORD_REPO='git@github.com:kravemir/MI-PYT-ukol-01.git'
-export LABELORD_BRANCH=modules
+export LABELORD_BRANCH=v0.3
 
 # run module tests
 python -m pytest tests_module/

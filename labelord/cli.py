@@ -45,7 +45,7 @@ def cli(ctx,config_path,token,version):
     ctx.obj['config_path'] = config_path
 
     if version:
-        print('labelord, version 0.1')
+        print('labelord, version 0.3')
 
 def retrieve_repos(session):
     repos = []

@@ -37,3 +37,12 @@ def test_create_label():
     result = create_label(session, 'kravemir/config', {'name': 'improvement', 'color': 'AACC99'})
 
     assert result.status_code == 201
+
+def test_delete_label():
+    # TODO: ???
+    session = make_session()
+
+    # TODO: check result
+    result = delete_label(session, 'kravemir/config', 'bug')
+
+    assert result.status_code == 204

@@ -1,11 +1,12 @@
 
 # TODO: should be in labelord.github package
 from labelord.cli import retrieve_repos
+from labelord.github import *
 
 import configparser
 import requests
 
-def test_repos_retrieve():
+def make_session():
     # TODO: ???
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
@@ -18,5 +19,21 @@ def test_repos_retrieve():
         req.headers['Authorization'] = 'token ' + token
         return req
     session.auth = token_auth
+    return session
 
-    print (retrieve_repos(session))
+def test_repos_retrieve():
+    # TODO: ???
+    session = make_session()
+
+    # TODO: check result
+    result = retrieve_repos(session)
+    assert 0 == 1
+
+def test_create_label():
+    # TODO: ???
+    session = make_session()
+
+    # TODO: check result
+    result = create_label(session, 'kravemir/config', {'name': 'improvement', 'color': 'AACC99'})
+
+    assert result.status_code == 201

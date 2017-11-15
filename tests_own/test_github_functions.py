@@ -5,6 +5,7 @@ from labelord.github import *
 
 import configparser
 import requests
+import pytest
 
 def make_session():
     # TODO: ???
@@ -29,14 +30,22 @@ def test_repos_retrieve():
     result = retrieve_repos(session)
     assert 0 == 1
 
-def test_create_label():
+@pytest.mark.parametrize(
+    ['repo', 'name', 'color', 'result_code' ],
+    [
+        ('kravemir/config', 'improvement', 'AACC99', 201),
+        ('kravemir/config', 'bug', 'AACC99', 422),
+        ('kravemir/not-existing-repo', 'new_label', '123456', 404),
+    ]
+)
+def test_create_label(repo, name, color, result_code):
     # TODO: ???
     session = make_session()
 
     # TODO: check result
-    result = create_label(session, 'kravemir/config', {'name': 'improvement', 'color': 'AACC99'})
+    result = create_label(session, repo, {'name': name, 'color': color})
 
-    assert result.status_code == 201
+    assert result.status_code == result_code
 
 def test_update_label():
     # TODO: ???

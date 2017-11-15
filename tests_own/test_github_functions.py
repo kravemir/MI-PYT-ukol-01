@@ -7,7 +7,8 @@ import configparser
 import requests
 import pytest
 
-def make_session():
+@pytest.fixture
+def session():
     # TODO: ???
     config = configparser.ConfigParser()
     config.optionxform = lambda option: option
@@ -22,10 +23,7 @@ def make_session():
     session.auth = token_auth
     return session
 
-def test_repos_retrieve():
-    # TODO: ???
-    session = make_session()
-
+def test_repos_retrieve(session):
     # TODO: check result
     result = retrieve_repos(session)
     assert 0 == 1
@@ -38,28 +36,19 @@ def test_repos_retrieve():
         ('kravemir/not-existing-repo', 'new_label', '123456', 404),
     ]
 )
-def test_create_label(repo, name, color, result_code):
-    # TODO: ???
-    session = make_session()
-
+def test_create_label(session, repo, name, color, result_code):
     # TODO: check result
     result = create_label(session, repo, {'name': name, 'color': color})
 
     assert result.status_code == result_code
 
-def test_update_label():
-    # TODO: ???
-    session = make_session()
-
+def test_update_label(session):
     # TODO: check result
     result = update_label(session, 'kravemir/config', 'bug', {'name': 'bug', 'color': '771100'})
 
     assert result.status_code == 200
 
-def test_delete_label():
-    # TODO: ???
-    session = make_session()
-
+def test_delete_label(session):
     # TODO: check result
     result = delete_label(session, 'kravemir/config', 'bug')
 

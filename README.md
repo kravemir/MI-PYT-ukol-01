@@ -29,6 +29,13 @@ python -m pytest tests_module/
 deactivate
 ```
 
+Run own tests:
+
+```bash
+# run tests without recording, using recorded cassettes
+python -m pytest tests_own/test_github_functions.py --verbose
+```
+
 Record cassettes:
 
 ```bash
@@ -46,6 +53,7 @@ export GITHUB_TOKEN
 # run: python -m labelord run replace
 # MANUAL
 
+# run tests with recording
 python -m pytest tests_own/test_github_functions.py --verbose
 
 # unset env variable

@@ -44,7 +44,10 @@ def session(betamax_parametrized_session):
 def test_repos_retrieve(session):
     # TODO: check result
     result = retrieve_repos(session)
-    assert 0 == 1
+    repos = [repo['full_name'] for repo in result]
+
+    assert 'kravemir/config' in repos
+    assert 'kravemir/kravemir.github.io' in repos
 
 @pytest.mark.parametrize(
     ['repo', 'name', 'color', 'result_code' ],

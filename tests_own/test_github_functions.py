@@ -6,19 +6,37 @@ from labelord.github import *
 import configparser
 import requests
 import pytest
+import betamax
+import os
+
+with betamax.Betamax.configure() as config:
+    if 'GITHUB_TOKEN' in os.environ:
+        # If the tests are invoked with an AUTH_FILE environ variable
+        TOKEN = os.environ['GITHUB_TOKEN']
+        # Always re-record the cassetes
+        # https://betamax.readthedocs.io/en/latest/record_modes.html
+        config.default_cassette_options['record_mode'] = 'all'
+    else:
+        TOKEN = 'false_token'
+        # Do not attempt to record sessions with bad fake token
+        config.default_cassette_options['record_mode'] = 'none'
+
+    # Hide the token in the cassettes
+    config.define_cassette_placeholder('<TOKEN>', TOKEN)
+    config.cassette_library_dir = 'tests_own/fixtures/cassettes'
 
 @pytest.fixture
-def session():
-    # TODO: ???
-    config = configparser.ConfigParser()
-    config.optionxform = lambda option: option
-    config.read('config.ini')
-    token = config['github']['token']
-    original_session = requests.Session()
+def session(betamax_parametrized_session):
+    if 'GITHUB_TOKEN' in os.environ:
+        TOKEN = os.environ['GITHUB_TOKEN']
+    else:
+        TOKEN = 'false_token'
+
+    original_session = betamax_parametrized_session or requests.Session()
     session = original_session
     session.headers = {'User-Agent': 'Python: MI-PYT-ukol-01 (by kravemir)'}
     def token_auth(req):
-        req.headers['Authorization'] = 'token ' + token
+        req.headers['Authorization'] = 'token ' + TOKEN
         return req
     session.auth = token_auth
     return session

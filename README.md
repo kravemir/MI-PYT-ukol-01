@@ -28,3 +28,26 @@ python -m pytest tests_module/
 
 deactivate
 ```
+
+Record cassettes:
+
+```bash
+# delete old cassettes
+rm tests_own/fixtures/cassettes/*.json
+
+# read and export token variable
+cat config.ini
+read GITHUB_TOKEN
+export GITHUB_TOKEN
+
+# MANUAL
+# CLEANUP REPOSITORIES, check test parameters to match status!!!
+# properly configure: config.ini
+# run: python -m labelord run replace
+# MANUAL
+
+python -m pytest tests_own/test_github_functions.py --verbose
+
+# unset env variable
+unset GITHUB_TOKEN
+```

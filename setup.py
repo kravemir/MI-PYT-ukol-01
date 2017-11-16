@@ -26,11 +26,19 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',
     ],
+    setup_requires = [
+        'pytest-runner',
+    ],
     install_requires = [
         'Flask>=0.12',
         'click>=6.7',
         'configparser>=3.5.0',
         'requests>=2.0'
+    ],
+    tests_require = [
+        'pytest==3.2.3',
+        'flexmock==0.10.2',
+        'betamax==0.8.0',
     ],
     entry_points={
         'console_scripts': [

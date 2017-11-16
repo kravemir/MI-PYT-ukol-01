@@ -28,3 +28,42 @@ python -m pytest tests_module/
 
 deactivate
 ```
+
+Run own tests:
+
+```bash
+# run tests without recording, using recorded cassettes
+python -m pytest tests_own/test_github_functions.py --verbose
+```
+
+Run setup tests:
+
+```bash
+python setup.py test --addopts tests_cli
+python setup.py test --addopts tests_web
+python setup.py test --addopts tests_own
+```
+
+Record cassettes:
+
+```bash
+# delete old cassettes
+rm tests_own/fixtures/cassettes/*.json
+
+# read and export token variable
+cat config.ini
+read GITHUB_TOKEN
+export GITHUB_TOKEN
+
+# MANUAL
+# CLEANUP REPOSITORIES, check test parameters to match status!!!
+# properly configure: config.ini
+# run: python -m labelord run replace
+# MANUAL
+
+# run tests with recording
+python -m pytest tests_own/test_github_functions.py --verbose
+
+# unset env variable
+unset GITHUB_TOKEN
+```

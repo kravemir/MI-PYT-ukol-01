@@ -3,3 +3,6 @@ include README.md
 exclude README.rst
 
 include LICENSE
+
+include tests_*/*.py
+include tests_*/fixtures/**/*

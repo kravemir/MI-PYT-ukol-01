@@ -36,7 +36,8 @@ setup(
         'requests>=2.0'
     ],
     tests_require = [
-        'pytest',
+        'pytest==3.2.3',
+        'flexmock==0.10.2',
         'betamax==0.8.0',
     ],
     entry_points={

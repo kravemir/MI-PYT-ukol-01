@@ -36,6 +36,14 @@ Run own tests:
 python -m pytest tests_own/test_github_functions.py --verbose
 ```
 
+Run setup tests:
+
+```bash
+python setup.py test --addopts tests_cli
+python setup.py test --addopts tests_web
+python setup.py test --addopts tests_own
+```
+
 Record cassettes:
 
 ```bash

@@ -3,8 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to MI-PYT: Labelord (kravemir)'s documentation!
-=======================================================
+MI-PYT: Labelord (kravemir)
+===========================
+
+Command-line GitHub label manager, and mini web application with GitHub webhook integration.
+
+The project is an implementation of assignments, of group Labelord, from university course MI-PYT (Advanced Python).
+
+Main features: TODO 1, TODO 2, TODO 3. More details documentation (TODO link)
+
+Used technologies: TODO 1, TODO 2, TODO 3. More details in documentation (TODO link).
 
 .. toctree::
    :maxdepth: 2
@@ -13,7 +21,7 @@ Welcome to MI-PYT: Labelord (kravemir)'s documentation!
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

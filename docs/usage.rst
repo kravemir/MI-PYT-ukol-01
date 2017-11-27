@@ -130,4 +130,8 @@ Run options:
 Web application
 ---------------
 
-TODO
+Would be documented in similar style as Command line application. BUT, since this isn't going to be ever really used by anybody else, I'm not motivated to cover whole documentation. It's a waste of time.
+
+Configuration file: TODO
+
+Run: TODO

@@ -9,7 +9,13 @@ Labelord has two components:
 Installation
 ------------
 
-TODO
+The application can be installed from test PyPI (not a real application, therefore it's only in test PyPI). And, it's good to install it within virtual environment:
+
+::
+
+    python3.6 -m venv __venv__
+    . __venv__/bin/activate
+    pip install --extra-index-url https://test.pypi.org/simple/ --user labelord-kravemir
 
 Command line application
 ------------------------
@@ -50,11 +56,13 @@ Run command (labels management)
 
 The primary purpose of command-line application is an easy configuration/synchronization of labels.
 
-Bla bla bla:
+Run command structure is following:
 
 ::
 
     python -m labelord [GLOBAL_OPTIONS] run <MODE> [RUN_OPTIONS]
+
+Behaviour of run command is configuration driven, and it is configured also in :code:`config.ini`. See `Labels specification`_, and `Repositories specification`_.
 
 Modes:
 
@@ -64,15 +72,42 @@ Modes:
 | :code:`update`                   | Creates labels, updates colors, keeps extra labels.           |
 +----------------------------------+---------------------------------------------------------------+
 | :code:`replace`                  | Creates labels, updates colors, deletes extra labels.         |
+|                                  |                                                               |
+|                                  | WARNING: this performs more destructive changes               |
 +----------------------------------+---------------------------------------------------------------+
 
-Behaviour is configured in :code:`config.ini`:
 
+Labels specification
+""""""""""""""""""""
 
-Example run configurations
+Labels can be specified as list of labels (name = color):
+
+::
+
+    [labels]
+    Bug = FF0000
+    Last year = 23FB89
+
+Or, a existing repository can be used as a template:
+
+::
+
+    [others]
+    template-repo = MarekSuchanek/myLabels
+
+Repositories specification
 """"""""""""""""""""""""""
 
-TODO
+Repositories, on which tool should operate, are specified as list:
+
+::
+
+    [repos]
+    MarekSuchanek/repo1 = on
+    MarekSuchanek/repo2 = on
+    CVUT/MI-PYT = off
+
+Or, tool can operate on all available repositories using option :code:`-a` / :code:`--all-repos`.
 
 Available run options
 """""""""""""""""""""

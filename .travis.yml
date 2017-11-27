@@ -7,3 +7,4 @@ script:
     - python setup.py test --addopts tests_cli
     - python setup.py test --addopts tests_web
     - python setup.py test --addopts tests_own
+    - sh -c 'cd docs && make html'
